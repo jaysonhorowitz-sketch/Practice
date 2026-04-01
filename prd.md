@@ -1,202 +1,145 @@
-# Product Requirements Document — UGC Studio
+# UGC Studio — Task List
 
-## Overview
-
-UGC Studio is an internal web app for a solo marketing agency operator to generate TikTok UGC videos at scale. It replaces the manual workflow of writing briefs by hand and sending them to freelance creators. The app takes minimal campaign inputs and autonomously runs the full pipeline: brief → script → AI-generated video, with no manual review steps in between.
-
----
-
-## Core User
-
-- **Single user** (solo agency operator)
-- No auth complexity needed — simple login or no login for MVP
-- No client-facing portal
+Internal TikTok UGC generation tool for a solo marketing agency operator.
+Full pipeline: campaign input → brief → script → HeyGen video → download.
 
 ---
 
-## Core Pipeline
+## Project Setup
 
-```
-Campaign Input → Brief (auto) → Script (auto) → HeyGen Video → Download
-```
+- [ ] Initialize Next.js 14 app with TypeScript and App Router in the current directory
+- [ ] Install and configure Tailwind CSS
+- [ ] Install and configure shadcn/ui with neutral theme
+- [ ] Install Prisma and set up PostgreSQL connection with DATABASE_URL env var
+- [ ] Install NextAuth.js for authentication
+- [ ] Install OpenAI SDK
+- [ ] Install ElevenLabs SDK or add axios for ElevenLabs REST API calls
+- [ ] Install AWS SDK v3 (S3 client) for Cloudflare R2 / S3 file storage
+- [ ] Create .env.local.example listing all required environment variables
+- [ ] Add .env.local to .gitignore
 
-Each step runs automatically without requiring user approval between steps. The user fills in campaign details and clicks "Generate" — the app handles everything else and notifies them when the video is ready.
+## Database Schema
 
----
+- [ ] Create Prisma schema with Client model (id, name, createdAt)
+- [ ] Add Campaign model (id, clientName, productName, productOneLiner, targetAudience, status enum: DRAFT/GENERATING/DONE/FAILED, createdAt, updatedAt)
+- [ ] Add Brief model (id, campaignId, hookConcept, keyTalkingPoints as Json, ctaText, generatedAt)
+- [ ] Add Script model (id, briefId, hookLine, body, ctaLine, fullText, generatedAt)
+- [ ] Add Video model (id, scriptId, heygenJobId, status enum: PENDING/PROCESSING/DONE/FAILED, videoUrl, audioUrl, heygenCreditsUsed, elevenlabsCharsUsed, openaiTokensUsed, estimatedCostUsd, completedAt)
+- [ ] Add Notification model (id, videoId, message, read Boolean default false, createdAt)
+- [ ] Run initial Prisma migration
 
-## Campaign Inputs (per video)
+## Auth
 
-The user provides these fields when creating a new campaign/video:
+- [ ] Configure NextAuth.js with credentials provider (username + password)
+- [ ] Add NEXTAUTH_SECRET to env vars
+- [ ] Create login page at /login with email and password form using shadcn/ui
+- [ ] Protect all app routes — redirect unauthenticated users to /login
+- [ ] Add a minimal session header with logout button to the app layout
 
-| Field | Description | Example |
-|---|---|---|
-| Client name | For organizational purposes | "Glow Skincare" |
-| Product name | Name of the product | "HydraSerum Pro" |
-| Product one-liner | What it does in plain English | "A daily serum that reduces dark spots in 2 weeks" |
-| Target audience | Who the video is for | "Women aged 25–40 dealing with uneven skin tone" |
+## Layout & Navigation
 
-That's it. The AI infers everything else.
+- [ ] Create root app layout with a minimal top navigation bar
+- [ ] Add nav links: Dashboard, New Campaign, Notifications
+- [ ] Show unread notification count badge on the Notifications nav link
+- [ ] Make layout fully responsive for desktop use
 
----
+## Dashboard Page
 
-## Script Format
+- [ ] Create /dashboard page listing all campaigns newest-first
+- [ ] Show each campaign as a table row: client name, product name, status badge, estimated cost, created date
+- [ ] Add status badge colors: GENERATING=yellow, DONE=green, FAILED=red, DRAFT=gray
+- [ ] Add "New Campaign" button linking to /campaigns/new
+- [ ] Show total spend across all campaigns at the top of the dashboard
+- [ ] Add empty state when no campaigns exist yet
 
-All scripts follow the **Problem → Solution** structure:
+## New Campaign Form
 
-1. **Hook (0–3s)** — Open with the audience's core problem/frustration
-2. **Body (3–25s)** — Introduce the product as the solution with 2–3 key benefits
-3. **CTA (25–30s)** — Clear call to action (e.g. "Link in bio to try it free")
+- [ ] Create /campaigns/new page with a form
+- [ ] Add form fields: Client Name, Product Name, Product One-Liner, Target Audience
+- [ ] Add client-side validation — all fields required
+- [ ] On submit, POST to /api/campaigns/create and redirect to /dashboard
+- [ ] Show loading state on the submit button while the request is in flight
+- [ ] Show error message if the API call fails
 
-Script length is optimized for 30–45 second TikTok videos.
+## Campaign API — Create & Trigger Pipeline
 
----
+- [ ] Create POST /api/campaigns/create route that saves a Campaign to the database with status GENERATING
+- [ ] After saving, immediately trigger the generation pipeline as a background task (do not await — respond to client first)
+- [ ] Pipeline step 1: call OpenAI GPT-4o to generate a Brief (hookConcept, keyTalkingPoints, ctaText) based on campaign fields and save to database
+- [ ] Pipeline step 2: call OpenAI GPT-4o to generate a Script (hookLine, body, ctaLine, fullText) in Problem→Solution format and save to database
+- [ ] Pipeline step 3: send fullText to ElevenLabs TTS API, get back audio, upload audio file to R2/S3, save audioUrl to Video record
+- [ ] Pipeline step 4: send script + audio to HeyGen API to create a video generation job, save heygenJobId and set Video status to PROCESSING
+- [ ] Log openaiTokensUsed and elevenlabsCharsUsed to the Video record after each step
+- [ ] If any step fails, set Campaign status to FAILED and save an error Notification
 
-## AI Video Generation
+## OpenAI Prompt Engineering
 
-- **Provider**: HeyGen API
-- **Avatar**: HeyGen stock avatar (user selects from available avatars once, saved as default)
-- **Voiceover**: ElevenLabs (natural-sounding TTS, one default voice)
-- **Captions**: Always burned into the video (critical for silent TikTok viewing)
-- **Video format**: 9:16 vertical, 1080×1920
+- [ ] Write the system prompt for brief generation: extract hook concept, 2-3 key talking points, and CTA from product info
+- [ ] Write the system prompt for script generation: Problem→Solution TikTok format, 30-45 seconds, hook (0-3s) + body (3-25s) + CTA (25-30s)
+- [ ] Return structured JSON from both prompts using OpenAI response_format: json_object
+- [ ] Validate the JSON shape before saving to database and throw a clear error if malformed
 
-### Generation Flow
-1. Script is sent to ElevenLabs → audio file generated
-2. Audio + script sent to HeyGen → video generation job created
-3. App polls HeyGen webhook/status endpoint in the background
-4. When complete: video is saved to storage, user receives in-app notification
-5. User downloads the MP4 directly
+## HeyGen Integration
 
----
+- [ ] Create a HeyGen API client utility in lib/heygen.ts
+- [ ] Implement createVideoJob(scriptText, audioUrl, avatarId) that calls HeyGen v2 video generate endpoint
+- [ ] Implement getVideoStatus(jobId) that polls HeyGen for job status and returns videoUrl when done
+- [ ] Read HEYGEN_API_KEY and HEYGEN_AVATAR_ID from environment variables
+
+## Background Polling — HeyGen Status
+
+- [ ] Create a Vercel Cron job at /api/cron/poll-heygen that runs every 2 minutes
+- [ ] Query all Video records with status PROCESSING
+- [ ] For each, call HeyGen getVideoStatus and update status in database
+- [ ] When a video is DONE: download the MP4 from HeyGen, upload to R2/S3, save videoUrl, set Campaign status to DONE
+- [ ] Create a Notification record when a video completes successfully
+- [ ] Set Campaign status to FAILED and create a Notification if HeyGen returns an error
+- [ ] Add CRON_SECRET env var and verify it on the cron route to prevent unauthorized calls
 
 ## Cost Tracking
 
-Every video generation logs:
+- [ ] After pipeline completes, calculate estimatedCostUsd: OpenAI tokens × rate + ElevenLabs chars × rate + HeyGen credits × rate
+- [ ] Save estimatedCostUsd to the Video record
+- [ ] Display cost breakdown on the campaign detail page (OpenAI / ElevenLabs / HeyGen line items + total)
+- [ ] Display total spend on the dashboard (sum of all estimatedCostUsd values)
 
-- OpenAI tokens used (brief + script)
-- ElevenLabs characters used
-- HeyGen credits consumed
-- Estimated USD cost
+## Campaign Detail Page
 
-Displayed as a cost breakdown on the video detail page and as a total on the dashboard.
+- [ ] Create /campaigns/[id] page
+- [ ] Show campaign metadata: client name, product, one-liner, target audience, status, created date
+- [ ] Show the generated brief: hook concept, key talking points, CTA
+- [ ] Show the generated script: hook line, body, CTA line
+- [ ] If video is DONE: embed an HTML5 video player with the videoUrl
+- [ ] Add a Download MP4 button that triggers a file download
+- [ ] If video is PROCESSING: show a "Generating video…" spinner and status message
+- [ ] If video is FAILED: show an error message with a Retry button
+- [ ] Show cost breakdown section at the bottom of the page
 
----
+## Notifications Page
 
-## UI Principles
+- [ ] Create /notifications page listing all notifications newest-first
+- [ ] Show notification message, linked campaign name, and timestamp
+- [ ] Mark notifications as read when the page is visited
+- [ ] Add a "Mark all as read" button
+- [ ] Show empty state when there are no notifications
 
-- **Fast and minimal** — no onboarding flows, no modals, no animations
-- **One primary action per screen**
-- Dense information layout — everything visible without scrolling
-- No marketing copy, no empty states with illustrations
+## File Storage — R2 / S3
 
-### Key Screens
+- [ ] Create a storage utility in lib/storage.ts with uploadFile(buffer, key, contentType) and getSignedUrl(key) functions
+- [ ] Use AWS SDK v3 S3Client pointed at Cloudflare R2 endpoint (or standard S3)
+- [ ] Read R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET_NAME from env vars
+- [ ] Store audio files under audio/{videoId}.mp3 and video files under video/{videoId}.mp4
 
-| Screen | Purpose |
-|---|---|
-| Dashboard | List of all campaigns with status (generating / done / failed) and total cost |
-| New Campaign | Single form — 4 fields + "Generate" button |
-| Campaign Detail | Shows brief, script, video player, download button, cost breakdown |
-| Notifications | In-app feed of completed/failed video jobs |
+## Error Handling & Resilience
 
----
+- [ ] Wrap each pipeline step in try/catch and log errors to console with campaign ID context
+- [ ] If ElevenLabs or HeyGen API returns a rate limit error (429), retry once after 10 seconds
+- [ ] Show user-friendly error messages on the campaign detail page — no raw stack traces
 
-## Tech Stack
+## Final Checks
 
-| Layer | Choice | Reason |
-|---|---|---|
-| Framework | Next.js 14 (App Router) + TypeScript | Full-stack, fast to build, Vercel-native |
-| Styling | Tailwind CSS + shadcn/ui | Fast, minimal, accessible components |
-| Database | PostgreSQL + Prisma ORM | Reliable, easy schema management |
-| Auth | NextAuth.js (credentials) | Simple username/password for solo use |
-| AI — Scripts | OpenAI GPT-4o | Best instruction-following for structured scripts |
-| AI — Voiceover | ElevenLabs API | Natural TTS with good pacing |
-| AI — Video | HeyGen API | Best talking-head AI avatar quality |
-| File Storage | Cloudflare R2 (or AWS S3) | Store generated MP4s |
-| Background Jobs | Vercel Cron + database polling | Poll HeyGen status, trigger notifications |
-| Deployment | Vercel | Instant deploys, free tier, Next.js-native |
-
----
-
-## Data Models
-
-```
-Campaign
-  id, clientName, productName, productOneLiner, targetAudience
-  status: draft | generating | done | failed
-  createdAt, updatedAt
-
-Brief
-  id, campaignId
-  hookConcept, keyTalkingPoints (array), ctaText
-  generatedAt
-
-Script
-  id, briefId
-  hookLine, body, ctaLine, fullText
-  generatedAt
-
-Video
-  id, scriptId
-  heygenJobId, status: pending | processing | done | failed
-  videoUrl, audioUrl
-  heygenCreditsUsed, elevenlabsCharsUsed, openaiTokensUsed
-  estimatedCostUsd
-  completedAt
-
-Notification
-  id, videoId, message, read (bool), createdAt
-```
-
----
-
-## MVP Scope
-
-### In Scope
-- [x] Campaign creation form (4 fields)
-- [x] Automated brief generation via GPT-4o
-- [x] Automated script generation via GPT-4o (Problem → Solution)
-- [x] ElevenLabs voiceover generation
-- [x] HeyGen video generation with stock avatar
-- [x] Captions burned into video
-- [x] Background polling for video completion
-- [x] In-app notification when video is ready
-- [x] Download MP4
-- [x] Cost tracking per video + dashboard total
-- [x] Campaign list view with status
-
-### Out of Scope (V1)
-- Client-facing portal
-- TikTok direct publishing
-- Multiple script variations / manual review
-- Custom brand assets or brand kits
-- Team/multi-user access
-- Performance analytics
-- Multiple video styles (only Problem → Solution in V1)
-
----
-
-## Environment Variables Required
-
-```
-OPENAI_API_KEY
-ELEVENLABS_API_KEY
-HEYGEN_API_KEY
-DATABASE_URL
-NEXTAUTH_SECRET
-R2_ACCOUNT_ID / AWS_ACCESS_KEY_ID
-R2_BUCKET_NAME / S3_BUCKET_NAME
-```
-
----
-
-## Verification Plan
-
-1. `npm run dev` — all pages load without errors
-2. Fill in campaign form → confirm GPT-4o returns a valid brief and script
-3. Script triggers ElevenLabs → audio file generated and stored
-4. Audio + script sent to HeyGen → job ID returned and stored
-5. Background poller updates video status from `processing` → `done`
-6. Notification appears in-app when video is complete
-7. Video plays in the browser and MP4 downloads successfully
-8. Cost breakdown shows accurate USD estimates
-9. `npm run build` — no TypeScript errors
-10. Deploy to Vercel — all env vars set, production build works
+- [ ] Run npm run build and fix all TypeScript errors
+- [ ] Confirm all pages load without console errors in development
+- [ ] Confirm a campaign can be created end-to-end in development with test API keys
+- [ ] Confirm the HeyGen polling cron updates video status correctly
+- [ ] Confirm MP4 download works from the campaign detail page
