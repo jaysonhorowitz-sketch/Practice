@@ -57,18 +57,18 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 - [x] Create /campaigns/new page with a form
 - [x] Add form fields: Client Name, Product Name, Product One-Liner, Target Audience
 - [x] Add client-side validation — all fields required
-- [ ] On submit, POST to /api/campaigns/create and redirect to /dashboard
-- [ ] Show loading state on the submit button while the request is in flight
-- [ ] Show error message if the API call fails
+- [x] On submit, POST to /api/campaigns/create and redirect to /dashboard
+- [x] Show loading state on the submit button while the request is in flight
+- [x] Show error message if the API call fails
 
 ## Campaign API — Create & Trigger Pipeline
 
-- [ ] Create POST /api/campaigns/create route that saves a Campaign to the database with status GENERATING
-- [ ] After saving, immediately trigger the generation pipeline as a background task (do not await — respond to client first)
-- [ ] Pipeline step 1: call OpenAI GPT-4o to generate a Brief (hookConcept, keyTalkingPoints, ctaText) based on campaign fields and save to database
-- [ ] Pipeline step 2: call OpenAI GPT-4o to generate a Script (hookLine, body, ctaLine, fullText) in Problem→Solution format and save to database
-- [ ] Pipeline step 3: send fullText to ElevenLabs TTS API, get back audio, upload audio file to R2/S3, save audioUrl to Video record
-- [ ] Pipeline step 4: send script + audio to HeyGen API to create a video generation job, save heygenJobId and set Video status to PROCESSING
+- [x] Create POST /api/campaigns/create route that saves a Campaign to the database with status GENERATING
+- [x] After saving, immediately trigger the generation pipeline as a background task (do not await — respond to client first)
+- [x] Pipeline step 1: call OpenAI GPT-4o to generate a Brief (hookConcept, keyTalkingPoints, ctaText) based on campaign fields and save to database
+- [x] Pipeline step 2: call OpenAI GPT-4o to generate a Script (hookLine, body, ctaLine, fullText) in Problem→Solution format and save to database
+- [x] Pipeline step 3: send fullText to ElevenLabs TTS API, get back audio, upload audio file to R2/S3, save audioUrl to Video record
+- [x] Pipeline step 4: send script + audio to HeyGen API to create a video generation job, save heygenJobId and set Video status to PROCESSING
 - [ ] Log openaiTokensUsed and elevenlabsCharsUsed to the Video record after each step
 - [ ] If any step fails, set Campaign status to FAILED and save an error Notification
 
