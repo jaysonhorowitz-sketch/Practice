@@ -7,7 +7,7 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 
 ## Project Setup
 
-- [ ] Initialize Next.js 14 app with TypeScript and App Router in the current directory
+- [x] Initialize Next.js 14 app with TypeScript and App Router in the current directory
 - [ ] Install and configure Tailwind CSS
 - [ ] Install and configure shadcn/ui with neutral theme
 - [ ] Install Prisma and set up PostgreSQL connection with DATABASE_URL env var
