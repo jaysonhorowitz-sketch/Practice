@@ -8,11 +8,11 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 ## Project Setup
 
 - [x] Initialize Next.js 14 app with TypeScript and App Router in the current directory
-- [ ] Install and configure Tailwind CSS
-- [ ] Install and configure shadcn/ui with neutral theme
-- [ ] Install Prisma and set up PostgreSQL connection with DATABASE_URL env var
-- [ ] Install NextAuth.js for authentication
-- [ ] Install OpenAI SDK
+- [x] Install and configure Tailwind CSS
+- [x] Install and configure shadcn/ui with neutral theme
+- [x] Install Prisma and set up PostgreSQL connection with DATABASE_URL env var
+- [x] Install NextAuth.js for authentication
+- [x] Install OpenAI SDK
 - [ ] Install ElevenLabs SDK or add axios for ElevenLabs REST API calls
 - [ ] Install AWS SDK v3 (S3 client) for Cloudflare R2 / S3 file storage
 - [ ] Create .env.local.example listing all required environment variables
