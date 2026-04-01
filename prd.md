@@ -56,7 +56,7 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 
 - [x] Create /campaigns/new page with a form
 - [x] Add form fields: Client Name, Product Name, Product One-Liner, Target Audience
-- [ ] Add client-side validation — all fields required
+- [x] Add client-side validation — all fields required
 - [ ] On submit, POST to /api/campaigns/create and redirect to /dashboard
 - [ ] Show loading state on the submit button while the request is in flight
 - [ ] Show error message if the API call fails
