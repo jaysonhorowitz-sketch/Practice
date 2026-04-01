@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Campaign {
+  id              String         @id @default(cuid())
+  clientName      String
+  productName     String
+  productOneLiner String
+  targetAudience  String
+  status          CampaignStatus @default(DRAFT)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  brief           Brief?
+}
+
+model Brief {
+  id               String   @id @default(cuid())
+  campaignId       String   @unique
+  campaign         Campaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  hookConcept      String
+  keyTalkingPoints Json
+  ctaText          String
+  generatedAt      DateTime @default(now())
+  script           Script?
+}
+
+model Script {
+  id          String   @id @default(cuid())
+  briefId     String   @unique
+  brief       Brief    @relation(fields: [briefId], references: [id], onDelete: Cascade)
+  hookLine    String
+  body        String
+  ctaLine     String
+  fullText    String
+  generatedAt DateTime @default(now())
+  video       Video?
+}
+
+model Video {
+  id                  String         @id @default(cuid())
+  scriptId            String         @unique
+  script              Script         @relation(fields: [scriptId], references: [id], onDelete: Cascade)
+  heygenJobId         String?
+  status              VideoStatus    @default(PENDING)
+  videoUrl            String?
+  audioUrl            String?
+  heygenCreditsUsed   Float?
+  elevenlabsCharsUsed Int?
+  openaiTokensUsed    Int?
+  estimatedCostUsd    Float?
+  completedAt         DateTime?
+  notifications       Notification[]
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  videoId   String
+  video     Video    @relation(fields: [videoId], references: [id], onDelete: Cascade)
+  message   String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+enum CampaignStatus {
+  DRAFT
+  GENERATING
+  DONE
+  FAILED
+}
+
+enum VideoStatus {
+  PENDING
+  PROCESSING
+  DONE
+  FAILED
+}

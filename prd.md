@@ -16,46 +16,46 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 - [x] Install ElevenLabs SDK or add axios for ElevenLabs REST API calls
 - [x] Install AWS SDK v3 (S3 client) for Cloudflare R2 / S3 file storage
 - [x] Create .env.local.example listing all required environment variables
-- [ ] Add .env.local to .gitignore
+- [x] Add .env.local to .gitignore
 
 ## Database Schema
 
-- [ ] Create Prisma schema with Client model (id, name, createdAt)
-- [ ] Add Campaign model (id, clientName, productName, productOneLiner, targetAudience, status enum: DRAFT/GENERATING/DONE/FAILED, createdAt, updatedAt)
-- [ ] Add Brief model (id, campaignId, hookConcept, keyTalkingPoints as Json, ctaText, generatedAt)
-- [ ] Add Script model (id, briefId, hookLine, body, ctaLine, fullText, generatedAt)
-- [ ] Add Video model (id, scriptId, heygenJobId, status enum: PENDING/PROCESSING/DONE/FAILED, videoUrl, audioUrl, heygenCreditsUsed, elevenlabsCharsUsed, openaiTokensUsed, estimatedCostUsd, completedAt)
-- [ ] Add Notification model (id, videoId, message, read Boolean default false, createdAt)
-- [ ] Run initial Prisma migration
+- [x] Create Prisma schema with Client model (id, name, createdAt)
+- [x] Add Campaign model (id, clientName, productName, productOneLiner, targetAudience, status enum: DRAFT/GENERATING/DONE/FAILED, createdAt, updatedAt)
+- [x] Add Brief model (id, campaignId, hookConcept, keyTalkingPoints as Json, ctaText, generatedAt)
+- [x] Add Script model (id, briefId, hookLine, body, ctaLine, fullText, generatedAt)
+- [x] Add Video model (id, scriptId, heygenJobId, status enum: PENDING/PROCESSING/DONE/FAILED, videoUrl, audioUrl, heygenCreditsUsed, elevenlabsCharsUsed, openaiTokensUsed, estimatedCostUsd, completedAt)
+- [x] Add Notification model (id, videoId, message, read Boolean default false, createdAt)
+- [x] Run initial Prisma migration
 
 ## Auth
 
-- [ ] Configure NextAuth.js with credentials provider (username + password)
-- [ ] Add NEXTAUTH_SECRET to env vars
-- [ ] Create login page at /login with email and password form using shadcn/ui
-- [ ] Protect all app routes — redirect unauthenticated users to /login
-- [ ] Add a minimal session header with logout button to the app layout
+- [x] Configure NextAuth.js with credentials provider (username + password)
+- [x] Add NEXTAUTH_SECRET to env vars
+- [x] Create login page at /login with email and password form using shadcn/ui
+- [x] Protect all app routes — redirect unauthenticated users to /login
+- [x] Add a minimal session header with logout button to the app layout
 
 ## Layout & Navigation
 
-- [ ] Create root app layout with a minimal top navigation bar
-- [ ] Add nav links: Dashboard, New Campaign, Notifications
-- [ ] Show unread notification count badge on the Notifications nav link
-- [ ] Make layout fully responsive for desktop use
+- [x] Create root app layout with a minimal top navigation bar
+- [x] Add nav links: Dashboard, New Campaign, Notifications
+- [x] Show unread notification count badge on the Notifications nav link
+- [x] Make layout fully responsive for desktop use
 
 ## Dashboard Page
 
-- [ ] Create /dashboard page listing all campaigns newest-first
-- [ ] Show each campaign as a table row: client name, product name, status badge, estimated cost, created date
-- [ ] Add status badge colors: GENERATING=yellow, DONE=green, FAILED=red, DRAFT=gray
-- [ ] Add "New Campaign" button linking to /campaigns/new
-- [ ] Show total spend across all campaigns at the top of the dashboard
-- [ ] Add empty state when no campaigns exist yet
+- [x] Create /dashboard page listing all campaigns newest-first
+- [x] Show each campaign as a table row: client name, product name, status badge, estimated cost, created date
+- [x] Add status badge colors: GENERATING=yellow, DONE=green, FAILED=red, DRAFT=gray
+- [x] Add "New Campaign" button linking to /campaigns/new
+- [x] Show total spend across all campaigns at the top of the dashboard
+- [x] Add empty state when no campaigns exist yet
 
 ## New Campaign Form
 
-- [ ] Create /campaigns/new page with a form
-- [ ] Add form fields: Client Name, Product Name, Product One-Liner, Target Audience
+- [x] Create /campaigns/new page with a form
+- [x] Add form fields: Client Name, Product Name, Product One-Liner, Target Audience
 - [ ] Add client-side validation — all fields required
 - [ ] On submit, POST to /api/campaigns/create and redirect to /dashboard
 - [ ] Show loading state on the submit button while the request is in flight
