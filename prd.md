@@ -13,9 +13,9 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 - [x] Install Prisma and set up PostgreSQL connection with DATABASE_URL env var
 - [x] Install NextAuth.js for authentication
 - [x] Install OpenAI SDK
-- [ ] Install ElevenLabs SDK or add axios for ElevenLabs REST API calls
-- [ ] Install AWS SDK v3 (S3 client) for Cloudflare R2 / S3 file storage
-- [ ] Create .env.local.example listing all required environment variables
+- [x] Install ElevenLabs SDK or add axios for ElevenLabs REST API calls
+- [x] Install AWS SDK v3 (S3 client) for Cloudflare R2 / S3 file storage
+- [x] Create .env.local.example listing all required environment variables
 - [ ] Add .env.local to .gitignore
 
 ## Database Schema
