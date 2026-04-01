@@ -70,13 +70,13 @@ Full pipeline: campaign input → brief → script → HeyGen video → download
 - [x] Pipeline step 3: send fullText to ElevenLabs TTS API, get back audio, upload audio file to R2/S3, save audioUrl to Video record
 - [x] Pipeline step 4: send script + audio to HeyGen API to create a video generation job, save heygenJobId and set Video status to PROCESSING
 - [x] Log openaiTokensUsed and elevenlabsCharsUsed to the Video record after each step
-- [ ] If any step fails, set Campaign status to FAILED and save an error Notification
+- [x] If any step fails, set Campaign status to FAILED and save an error Notification
 
 ## OpenAI Prompt Engineering
 
-- [ ] Write the system prompt for brief generation: extract hook concept, 2-3 key talking points, and CTA from product info
-- [ ] Write the system prompt for script generation: Problem→Solution TikTok format, 30-45 seconds, hook (0-3s) + body (3-25s) + CTA (25-30s)
-- [ ] Return structured JSON from both prompts using OpenAI response_format: json_object
+- [x] Write the system prompt for brief generation: extract hook concept, 2-3 key talking points, and CTA from product info
+- [x] Write the system prompt for script generation: Problem→Solution TikTok format, 30-45 seconds, hook (0-3s) + body (3-25s) + CTA (25-30s)
+- [x] Return structured JSON from both prompts using OpenAI response_format: json_object
 - [ ] Validate the JSON shape before saving to database and throw a clear error if malformed
 
 ## HeyGen Integration

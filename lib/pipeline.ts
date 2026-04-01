@@ -8,6 +8,12 @@ function getOpenAI() {
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 }
 
+const MOCK_MODE = process.env.MOCK_MODE === "true"
+
+// Sample TikTok-style video for mock mode (public domain)
+const MOCK_VIDEO_URL =
+  "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+
 const BRIEF_SYSTEM_PROMPT = `You are a TikTok UGC creative strategist. Given product info, generate a creative brief.
 Return valid JSON with this exact shape:
 {
@@ -38,8 +44,8 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   try {
     return await fn()
   } catch (err: unknown) {
-    const status = (err as { status?: number; response?: { status?: number } })
-      ?.status ??
+    const status =
+      (err as { status?: number; response?: { status?: number } })?.status ??
       (err as { response?: { status?: number } })?.response?.status
     if (status === 429) {
       await sleep(10000)
@@ -49,31 +55,90 @@ async function withRetry<T>(fn: () => Promise<T>): Promise<T> {
   }
 }
 
+function mockBriefData(campaign: { productName: string; productOneLiner: string; targetAudience: string }) {
+  return {
+    hookConcept: `The moment ${campaign.targetAudience} realise they've been doing it wrong`,
+    keyTalkingPoints: [
+      `${campaign.productName} works in just minutes`,
+      "No complicated routine needed",
+      "Real results you can actually see",
+    ],
+    ctaText: "Tap the link in bio to grab yours before it sells out",
+  }
+}
+
+function mockScriptData(productName: string, targetAudience: string) {
+  const hookLine = `If you're ${targetAudience} and you're still struggling — watch this.`
+  const body = `I used to deal with the same thing until I found ${productName}. It's different because it actually works with your lifestyle, not against it. Within the first week I noticed a real difference — and I'm not the only one.`
+  const ctaLine = `Link in bio — they're running a limited offer right now so don't sleep on it.`
+  return {
+    hookLine,
+    body,
+    ctaLine,
+    fullText: `${hookLine} ${body} ${ctaLine}`,
+  }
+}
+
 export async function runPipeline(campaignId: string) {
   try {
     const campaign = await db.campaign.findUniqueOrThrow({
       where: { id: campaignId },
     })
 
-    const openai = getOpenAI()
+    let briefData: { hookConcept: string; keyTalkingPoints: string[]; ctaText: string }
+    let scriptData: { hookLine: string; body: string; ctaLine: string; fullText: string }
+    let totalOpenAiTokens = 0
+    let elevenlabsChars = 0
 
-    // Step 1 — Brief
-    const briefCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: BRIEF_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Product: ${campaign.productName}\nDescription: ${campaign.productOneLiner}\nTarget audience: ${campaign.targetAudience}`,
-        },
-      ],
-    })
-    const briefTokens = briefCompletion.usage?.total_tokens ?? 0
-    const briefData = JSON.parse(briefCompletion.choices[0].message.content ?? "{}")
-    if (!briefData.hookConcept || !briefData.keyTalkingPoints || !briefData.ctaText) {
-      throw new Error("Brief JSON missing required fields")
+    if (MOCK_MODE) {
+      // Simulate a short delay so the UI shows "Generating" briefly
+      await sleep(1500)
+      briefData = mockBriefData(campaign)
+      scriptData = mockScriptData(campaign.productName, campaign.targetAudience)
+      elevenlabsChars = scriptData.fullText.length
+    } else {
+      const openai = getOpenAI()
+
+      // Step 1 — Brief
+      const briefCompletion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: BRIEF_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Product: ${campaign.productName}\nDescription: ${campaign.productOneLiner}\nTarget audience: ${campaign.targetAudience}`,
+          },
+        ],
+      })
+      const briefTokens = briefCompletion.usage?.total_tokens ?? 0
+      briefData = JSON.parse(briefCompletion.choices[0].message.content ?? "{}")
+      if (!briefData.hookConcept || !briefData.keyTalkingPoints || !briefData.ctaText) {
+        throw new Error("Brief JSON missing required fields")
+      }
+
+      // Step 2 — Script
+      const scriptCompletion = await openai.chat.completions.create({
+        model: "gpt-4o",
+        response_format: { type: "json_object" },
+        messages: [
+          { role: "system", content: SCRIPT_SYSTEM_PROMPT },
+          {
+            role: "user",
+            content: `Hook concept: ${briefData.hookConcept}\nKey talking points: ${briefData.keyTalkingPoints.join(", ")}\nCTA: ${briefData.ctaText}\nProduct: ${campaign.productName}\nAudience: ${campaign.targetAudience}`,
+          },
+        ],
+      })
+      const scriptTokens = scriptCompletion.usage?.total_tokens ?? 0
+      scriptData = JSON.parse(scriptCompletion.choices[0].message.content ?? "{}")
+      if (!scriptData.hookLine || !scriptData.body || !scriptData.ctaLine || !scriptData.fullText) {
+        throw new Error("Script JSON missing required fields")
+      }
+
+      totalOpenAiTokens = briefTokens + scriptTokens
+      elevenlabsChars = scriptData.fullText.length
     }
+
     const brief = await db.brief.create({
       data: {
         campaignId,
@@ -83,23 +148,6 @@ export async function runPipeline(campaignId: string) {
       },
     })
 
-    // Step 2 — Script
-    const scriptCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
-      response_format: { type: "json_object" },
-      messages: [
-        { role: "system", content: SCRIPT_SYSTEM_PROMPT },
-        {
-          role: "user",
-          content: `Hook concept: ${brief.hookConcept}\nKey talking points: ${(brief.keyTalkingPoints as string[]).join(", ")}\nCTA: ${brief.ctaText}\nProduct: ${campaign.productName}\nAudience: ${campaign.targetAudience}`,
-        },
-      ],
-    })
-    const scriptTokens = scriptCompletion.usage?.total_tokens ?? 0
-    const scriptData = JSON.parse(scriptCompletion.choices[0].message.content ?? "{}")
-    if (!scriptData.hookLine || !scriptData.body || !scriptData.ctaLine || !scriptData.fullText) {
-      throw new Error("Script JSON missing required fields")
-    }
     const script = await db.script.create({
       data: {
         briefId: brief.id,
@@ -110,7 +158,32 @@ export async function runPipeline(campaignId: string) {
       },
     })
 
-    const totalOpenAiTokens = briefTokens + scriptTokens
+    if (MOCK_MODE) {
+      // Skip audio/video APIs — mark as done immediately with sample video
+      const estimatedCostUsd = 0
+      const video = await db.video.create({
+        data: {
+          scriptId: script.id,
+          status: "DONE",
+          videoUrl: MOCK_VIDEO_URL,
+          openaiTokensUsed: 0,
+          elevenlabsCharsUsed: elevenlabsChars,
+          estimatedCostUsd,
+          completedAt: new Date(),
+        },
+      })
+      await db.campaign.update({
+        where: { id: campaignId },
+        data: { status: "DONE" },
+      })
+      await db.notification.create({
+        data: {
+          videoId: video.id,
+          message: `[Mock] Video ready for "${campaign.productName}" (${campaign.clientName})`,
+        },
+      })
+      return
+    }
 
     // Step 3 — ElevenLabs voiceover
     const voiceRes = await withRetry(() =>
@@ -131,9 +204,7 @@ export async function runPipeline(campaignId: string) {
       )
     )
     const audioBuffer = Buffer.from(voiceRes.data)
-    const elevenlabsChars = script.fullText.length
 
-    // Create video record first so we have an ID for the storage key
     const video = await db.video.create({
       data: {
         scriptId: script.id,
@@ -157,10 +228,9 @@ export async function runPipeline(campaignId: string) {
       createVideoJob(script.fullText, audioUrl)
     )
 
-    // Estimate cost
     const openAiCost = totalOpenAiTokens * 0.000005
-    const elevenlabsCost = elevenlabsChars * 0.000030
-    const heygenCost = 1 * 0.05 // ~$0.05 per credit estimate
+    const elevenlabsCost = elevenlabsChars * 0.00003
+    const heygenCost = 1 * 0.05
     const estimatedCostUsd = openAiCost + elevenlabsCost + heygenCost
 
     await db.video.update({
