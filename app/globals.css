@@ -1,0 +1,399 @@
+@import "tailwindcss";
+
+/* ─── MongoDB Design Tokens ─────────────────────────────────────────────── */
+:root {
+  --bg:           #001E2B;
+  --bg-deep:      #001422;
+  --card:         #0D2235;
+  --card-hover:   #112840;
+  --card-raised:  #1A3347;
+  --accent:       #00ED64;
+  --accent-dim:   #00C050;
+  --accent-glow:  rgba(0, 237, 100, 0.18);
+  --accent-glow-strong: rgba(0, 237, 100, 0.35);
+  --text:         #FFFFFF;
+  --text-secondary: #C8D8E3;
+  --muted:        #8A9BA8;
+  --border:       rgba(0, 237, 100, 0.12);
+  --border-strong: rgba(0, 237, 100, 0.25);
+  --icp-a:        #FF6B6B;
+  --icp-b:        #FFD166;
+  --icp-c:        #06D6A0;
+  --shadow-card:  0 4px 24px rgba(0, 0, 0, 0.4), 0 1px 4px rgba(0, 0, 0, 0.3);
+  --shadow-raised: 0 8px 40px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.4);
+  --shadow-glow:  0 0 20px rgba(0, 237, 100, 0.15), 0 4px 24px rgba(0, 0, 0, 0.4);
+  --shadow-glow-strong: 0 0 32px rgba(0, 237, 100, 0.3), 0 8px 40px rgba(0, 0, 0, 0.5);
+}
+
+/* ─── Easing Curves (Emil Kowalski) ──────────────────────────────────────── */
+:root {
+  --ease-out:    cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+html, body {
+  background: var(--bg-deep);
+  color: var(--text);
+  min-height: 100%;
+  font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* { box-sizing: border-box; }
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+/* ─── Card Utility ───────────────────────────────────────────────────────── */
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-card);
+  transition: border-color 200ms var(--ease-out), box-shadow 200ms var(--ease-out), background 200ms var(--ease-out);
+}
+.card:hover {
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(0, 237, 100, 0.08);
+  background: var(--card-hover);
+}
+.card-raised {
+  background: var(--card-raised);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  box-shadow: var(--shadow-raised);
+}
+
+/* ─── Button Utility ─────────────────────────────────────────────────────── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #001E2B;
+  background: var(--accent);
+  border: none;
+  cursor: pointer;
+  transition: transform 160ms var(--ease-out), background 160ms var(--ease-out), box-shadow 160ms var(--ease-out);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.3);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.btn-primary:hover {
+  background: #00ff6e;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.25), 0 4px 16px rgba(0,0,0,0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: color 160ms var(--ease-out), border-color 160ms var(--ease-out), background 160ms var(--ease-out), transform 160ms var(--ease-out);
+  text-decoration: none;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+.btn-ghost:hover {
+  color: var(--accent);
+  border-color: var(--border-strong);
+  background: var(--accent-glow);
+}
+.btn-ghost:active { transform: scale(0.97); }
+
+/* ─── Tab Utility ────────────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-deep);
+  flex-shrink: 0;
+}
+.tab-btn {
+  flex: 1;
+  padding: 10px 4px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  color: var(--muted);
+  transition: color 150ms var(--ease-out), border-color 150ms var(--ease-out), transform 100ms var(--ease-out);
+}
+.tab-btn:hover { color: var(--text-secondary); }
+.tab-btn:active { transform: scale(0.97); }
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+/* ─── Stat Badge ─────────────────────────────────────────────────────────── */
+.stat-block {
+  text-align: center;
+  padding: 6px 14px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border);
+  transition: border-color 0.2s;
+}
+.stat-block:hover { border-color: var(--border-strong); }
+.stat-value { font-size: 20px; font-weight: 800; line-height: 1.1; font-family: var(--font-mono), monospace; letter-spacing: -0.02em; }
+.stat-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
+
+/* ─── Glow Accent Text ───────────────────────────────────────────────────── */
+.accent-glow {
+  color: var(--accent);
+  text-shadow: 0 0 16px rgba(0, 237, 100, 0.45);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────────── */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(0, 237, 100, 0.3); }
+  50%       { box-shadow: 0 0 20px rgba(0, 237, 100, 0.6); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.fade-in { animation: fadeIn 0.25s ease forwards; }
+
+.skeleton {
+  background: linear-gradient(90deg,
+    var(--card) 25%,
+    var(--card-hover) 50%,
+    var(--card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ─── Priority Bar ───────────────────────────────────────────────────────── */
+.priority-bar-track {
+  flex: 1;
+  height: 5px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.priority-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 500ms var(--ease-out);
+}
+
+/* ─── Prospect List Item ─────────────────────────────────────────────────── */
+.prospect-item {
+  padding: 13px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  border-left: 3px solid transparent;
+  transition: background 0.15s ease, border-left-color 0.15s ease;
+}
+.prospect-item:hover { background: rgba(0, 237, 100, 0.04); }
+.prospect-item.selected {
+  background: linear-gradient(90deg, rgba(0, 237, 100, 0.08) 0%, rgba(0, 237, 100, 0.03) 100%);
+  border-left-color: var(--accent);
+  box-shadow: inset 0 0 20px rgba(0, 237, 100, 0.04);
+}
+
+/* ─── Header Gradient ────────────────────────────────────────────────────── */
+.app-header {
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border);
+  background: linear-gradient(180deg, #001A26 0%, #001422 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 1px 0 var(--border), 0 4px 20px rgba(0,0,0,0.3);
+}
+
+/* ─── Logo Mark ──────────────────────────────────────────────────────────── */
+/* ─── Scan Line Overlay ──────────────────────────────────────────────────── */
+.app-header::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    var(--accent) 30%,
+    rgba(0,237,100,0.8) 50%,
+    var(--accent) 70%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: scanline 3s linear infinite;
+}
+.app-header { position: relative; overflow: visible; }
+
+@keyframes scanline {
+  0%   { background-position: -100% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ─── Logo pulse ─────────────────────────────────────────────────────────── */
+.logo-mark {
+  animation: logo-pulse 3s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%, 100% { box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.4), 0 0 12px rgba(0, 237, 100, 0.2); }
+  50%       { box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 8px rgba(0,0,0,0.4), 0 0 24px rgba(0, 237, 100, 0.4); }
+}
+
+/* ─── Refined accent card ────────────────────────────────────────────────── */
+.card-glow {
+  position: relative;
+  background: var(--card);
+  border-radius: 10px;
+  border: 1px solid rgba(0, 237, 100, 0.2);
+  box-shadow: var(--shadow-card), inset 0 1px 0 rgba(0, 237, 100, 0.06);
+}
+
+/* ─── Stat number count-up ───────────────────────────────────────────────── */
+.stat-value {
+  animation: stat-appear 0.4s var(--ease-out) both;
+}
+@keyframes stat-appear {
+  from { opacity: 0; transform: translateY(6px) scale(0.95); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* ─── Prospect item hover ────────────────────────────────────────────────── */
+.prospect-item {
+  transform: translateX(0);
+  transition: background 150ms var(--ease-out), border-left-color 150ms var(--ease-out), transform 150ms var(--ease-out);
+}
+.prospect-item:hover {
+  transform: translateX(2px);
+}
+.prospect-item.selected {
+  transform: translateX(3px);
+}
+
+/* ─── Accent text ────────────────────────────────────────────────────────── */
+.accent-glow {
+  color: var(--accent);
+}
+
+/* ─── Page fade in ───────────────────────────────────────────────────────── */
+body > div {
+  animation: page-in 0.4s ease both;
+}
+@keyframes page-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* ─── Button shine sweep ─────────────────────────────────────────────────── */
+.btn-primary {
+  overflow: hidden;
+}
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255,255,255,0.25),
+    transparent
+  );
+  transform: skewX(-20deg);
+  animation: btn-shine 3s ease-in-out infinite;
+}
+.btn-primary { position: relative; overflow: hidden; }
+@keyframes btn-shine {
+  0%   { left: -75%; }
+  30%, 100% { left: 125%; }
+}
+
+/* ─── Form Inputs ────────────────────────────────────────────────────────── */
+input, textarea, select {
+  transition: border-color 150ms var(--ease-out), box-shadow 150ms var(--ease-out);
+}
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--border-strong) !important;
+  box-shadow: 0 0 0 2px rgba(0, 237, 100, 0.12), inset 0 1px 0 rgba(0, 237, 100, 0.06) !important;
+}
+
+/* ─── Section Headers ────────────────────────────────────────────────────── */
+.section-header {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.section-header::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+/* ─── Logo Mark ──────────────────────────────────────────────────────────── */
+.logo-mark {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 15px;
+  font-weight: 900;
+  color: #001E2B;
+  box-shadow: 0 0 16px rgba(0, 237, 100, 0.4);
+  flex-shrink: 0;
+}
